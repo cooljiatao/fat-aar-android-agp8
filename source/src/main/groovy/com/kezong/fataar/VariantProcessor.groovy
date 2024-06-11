@@ -79,6 +79,7 @@ class VariantProcessor {
         processGenerateProguard()
         processDataBinding(bundleTask)
         processRClasses(transform, bundleTask)
+        processDeeplinks()
     }
 
     private static void printEmbedArtifacts(Collection<ResolvedArtifact> artifacts,
@@ -191,6 +192,13 @@ class VariantProcessor {
             transformRClasses(transform, transformTask, bundleTask, reBundleTask)
         } else {
             generateRClasses(bundleTask, reBundleTask)
+        }
+    }
+
+    private void processDeeplinks(){
+        TaskProvider deeplinkTask = mProject.tasks.named("extractDeepLinksForAar${mVariant.name.capitalize()}")
+        deeplinkTask.configure {
+            dependsOn(mExplodeTasks)
         }
     }
 
@@ -473,7 +481,7 @@ class VariantProcessor {
             for (archiveLibrary in mAndroidArchiveLibraries) {
                 FatUtils.logInfo("Merge resource，Library res：${archiveLibrary.resFolder}")
                 mVariant.registerGeneratedResFolders(
-                        mProject.files(archiveLibrary.resFolder)
+                        mProject.files(archiveLibrary.resFolder).setBuiltBy(mExplodeTasks)
                 )
             }
         }

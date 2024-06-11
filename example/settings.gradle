@@ -7,6 +7,6 @@ include ':app'
 
 includeBuild('../source') {
     dependencySubstitution {
-        substitute module('com.github.kezong:fat-aar') using project(':')
+        substitute module('com.github.lsuski:fat-aar') using project(':')
     }
 }
