@@ -79,7 +79,7 @@ class VariantProcessor {
         processGenerateProguard()
         processDataBinding(bundleTask)
         processRClasses(transform, bundleTask)
-        processDeeplinks()
+        processDeepLinkTasks()
     }
 
     private static void printEmbedArtifacts(Collection<ResolvedArtifact> artifacts,
@@ -195,13 +195,6 @@ class VariantProcessor {
         }
     }
 
-    private void processDeeplinks(){
-        TaskProvider deeplinkTask = mProject.tasks.named("extractDeepLinksForAar${mVariant.name.capitalize()}")
-        deeplinkTask.configure {
-            dependsOn(mExplodeTasks)
-        }
-    }
-
     private void transformRClasses(RClassesTransform transform, TaskProvider transformTask, TaskProvider bundleTask, TaskProvider reBundleTask) {
         transform.putTargetPackage(mVariant.name, mVariant.getApplicationId())
         transformTask.configure {
@@ -225,6 +218,18 @@ class VariantProcessor {
         TaskProvider RTask = rClassesGenerate.configure(reBundleTask)
         bundleTask.configure {
             finalizedBy(RTask)
+        }
+    }
+
+    private void processDeepLinkTasks() {
+        String taskName = "extractDeepLinksForAar${mVariant.name.capitalize()}"
+        TaskProvider extractDeepLinks = mProject.tasks.named(taskName)
+        if (extractDeepLinks == null) {
+            throw new RuntimeException("Can not find task ${taskName}!")
+        }
+
+        extractDeepLinks.configure {
+            dependsOn(mExplodeTasks)
         }
     }
 
@@ -477,13 +482,13 @@ class VariantProcessor {
 
         resourceGenTask.configure {
             dependsOn(mExplodeTasks)
+        }
 
-            for (archiveLibrary in mAndroidArchiveLibraries) {
-                FatUtils.logInfo("Merge resource，Library res：${archiveLibrary.resFolder}")
-                mVariant.registerGeneratedResFolders(
-                        mProject.files(archiveLibrary.resFolder).setBuiltBy(mExplodeTasks)
-                )
-            }
+        for (archiveLibrary in mAndroidArchiveLibraries) {
+            FatUtils.logInfo("Merge resource，Library res：${archiveLibrary.resFolder}")
+            mVariant.registerGeneratedResFolders(
+                    mProject.files(archiveLibrary.resFolder)
+            )
         }
     }
 
